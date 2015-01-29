@@ -71,13 +71,13 @@ int main(int argc, char **argv) {
     }
 
     // default
-    //ReactDiffuse reactDiffuse(MATRIX_W, MATRIX_H, .055, .062);
+    //reaction_diffusion_system_init(&rds, MATRIX_W, MATRIX_H, .055, .062, 1.0, 0.5);
 
     // mitosis
-    //ReactDiffuse reactDiffuse(MATRIX_W, MATRIX_H, .0367, .0649);
+    reaction_diffusion_system_init(&rds, MATRIX_W, MATRIX_H, .0367, .0649, 1.0, 0.5);
 
     // coral
-    reaction_diffusion_system_init(&rds, MATRIX_W, MATRIX_H, .0545, .062, 1.0, 0.5);
+    // reaction_diffusion_system_init(&rds, MATRIX_W, MATRIX_H, .0545, .062, 1.0, 0.5);
 
 
     SDL_Event event;

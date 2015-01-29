@@ -19,8 +19,7 @@ if (APPLE)
     set( project_SOURCES ${project_SOURCES} ${OSX_ICON_FILES} )
 endif()
 
-#add_executable(ReactDiffuse WIN32 MACOSX_BUNDLE ${project_SOURCES})
-add_executable(ReactDiffuse WIN32 ${project_SOURCES})
+add_executable(ReactDiffuse WIN32 MACOSX_BUNDLE ${project_SOURCES})
 
 if (APPLE)
     set_target_properties(ReactDiffuse PROPERTIES
