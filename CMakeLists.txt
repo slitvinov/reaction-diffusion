@@ -2,20 +2,12 @@ cmake_minimum_required (VERSION 2.8)
 project (ReactDiffuse)
 set(VERSION "0.1.0")
 
-# Required libraries in this source dir
-add_subdirectory(lib/glfw EXCLUDE_FROM_ALL)
-
-# use GLUT
-find_package(GLUT REQUIRED)
-include_directories(${GLUT_INCLUDE_DIR})
 
 # include paths
-include_directories(${GLUT_INCLUDE_DIRS} lib/glfw/include src)
+include_directories(src)
 
-if (NOT APPLE)
-    # HACK: This is NOTFOUND on OS X 10.8
-    include_directories(${OPENGL_INCLUDE_DIR})
-endif()
+find_package(SDL REQUIRED)
+include_directories(${SDL_INCLUDE_DIR})
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "bin/")
 file(GLOB_RECURSE project_SOURCES "src/*.cpp")
@@ -28,7 +20,8 @@ if (APPLE)
     set( project_SOURCES ${project_SOURCES} ${OSX_ICON_FILES} )
 endif()
 
-add_executable(ReactDiffuse WIN32 MACOSX_BUNDLE ${project_SOURCES})
+#add_executable(ReactDiffuse WIN32 MACOSX_BUNDLE ${project_SOURCES})
+add_executable(ReactDiffuse WIN32 ${project_SOURCES})
 
 if (APPLE)
     set_target_properties(ReactDiffuse PROPERTIES
@@ -44,6 +37,8 @@ if (MSVC)
                           LINK_FLAGS "/ENTRY:mainCRTStartup")
 endif()
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")
-target_link_libraries(ReactDiffuse glfw ${GLFW_LIBRARIES} ${GLUT_LIBRARIES})
+link_directories( /usr/local/lib )
+
+set(CMAKE_CXX_FLAGS "-stdlib=libc++")
+target_link_libraries(ReactDiffuse ${SDL_LIBRARY})
 
