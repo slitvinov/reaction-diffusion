@@ -1,36 +1,40 @@
 #ifndef __REACT_DIFFUSE_H__
 #define __REACT_DIFFUSE_H__
 
-#include <cstdlib>
+#include <stdlib.h>
 
-const double DU = 1.0;
-const double DV = 0.5;
+#define DU 1.0
+#define DV 0.5
 
-class ReactDiffuse {
+typedef struct {
+    size_t width;
+    size_t height;
+    double f;
+    double k;
+    double du;
+    double dv;
 
-    public:
+    double *U;
+    double *V;
+    double *swapU;
+    double *swapV;
+} reaction_diffusion_system ;
 
-        ReactDiffuse(int width, int height, double f, double k);
-        ~ReactDiffuse();
+void reaction_diffusion_system_init(reaction_diffusion_system *system,
+                                    size_t width,
+                                    size_t height,
+                                    double f,
+                                    double k,
+                                    double du,
+                                    double dv);
 
-        void update(double dt);
+void reaction_diffusion_system_free(reaction_diffusion_system *system);
 
-        double get(double *m, int x, int y);
-        void set(double *m, int x, int y, double v);
+void reaction_diffusion_system_update(reaction_diffusion_system *system, double dt);
 
-        int width;
-        int height;
-        double *U;
-        double *V;
+double reaction_diffusion_system_get(reaction_diffusion_system *system, double *m, size_t x, size_t y);
 
-    private:
-        double *swapU;
-        double *swapV;
-
-        double f;
-        double k;
-
-        void calculateLaplacian(double *from, double *to);
-};
+void reaction_diffusion_system_set(reaction_diffusion_system *system, double *m, size_t x, size_t y, double v);
 
 #endif
+

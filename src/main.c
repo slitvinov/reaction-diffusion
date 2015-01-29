@@ -1,24 +1,17 @@
 #include <SDL.h>
-#include <iostream>
+#include <stdio.h>
 #include "reactdiffuse.h"
 
-const int WINDOW_WIDTH = 800;
-const int WINDOW_HEIGHT = 800;
+#define WINDOW_WIDTH 800
+#define WINDOW_HEIGHT 800
 
-const int MATRIX_W = 200;
-const int MATRIX_H = 200;
+#define MATRIX_W 200
+#define MATRIX_H 200
 
-const float RATIO_X = WINDOW_WIDTH / MATRIX_W;
-const float RATIO_Y = WINDOW_HEIGHT / MATRIX_H;
+#define RATIO_X (WINDOW_WIDTH / MATRIX_W)
+#define RATIO_Y (WINDOW_HEIGHT / MATRIX_H)
 
-// default
-//ReactDiffuse reactDiffuse(MATRIX_W, MATRIX_H, .055, .062);
-
-// mitosis
-//ReactDiffuse reactDiffuse(MATRIX_W, MATRIX_H, .0367, .0649);
-
-// coral
-ReactDiffuse reactDiffuse(MATRIX_W, MATRIX_H, .0545, .062);
+reaction_diffusion_system rds;
 
 Uint32 SDL_MapHSV (SDL_PixelFormat *fmt, float h, float s, float v) {
     float r, g, b;
@@ -47,24 +40,23 @@ void draw(SDL_Surface *surface) {
 
     for (int x = 0; x < MATRIX_W; x++) {
         for (int y = 0; y < MATRIX_H; y++) {
-            double u = reactDiffuse.get(reactDiffuse.U, x, y);
-            double v = reactDiffuse.get(reactDiffuse.V, x, y);
+            double u = reaction_diffusion_system_get(&rds, rds.U, x, y);
+            double v = reaction_diffusion_system_get(&rds, rds.V, x, y);
 
             rect.x = RATIO_X * x;
             rect.y = RATIO_Y * y;
 
             SDL_FillRect(surface,
                          &rect,
-                         SDL_MapHSV( surface->format, v * 360, v, u ));
-                         //SDL_MapRGB( surface->format, u * 255, 0, v * 255 ));
+                         SDL_MapHSV(surface->format, v * 360, v, u ));
         }
     }
 }
 
 int main(int argc, char **argv) {
-    /* SDL Setup */
+    /* SDL SEtup */
     if ( SDL_Init(SDL_INIT_VIDEO) < 0 ) {
-        std::cerr <<  "Could not initialize SDL " << SDL_GetError() << std::endl;
+        fprintf(stderr, "Could not initialize SDL: %s\n", SDL_GetError());
         exit(1);
     }
     atexit(SDL_Quit);
@@ -73,21 +65,32 @@ int main(int argc, char **argv) {
 
     surface = SDL_SetVideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, 32, SDL_HWSURFACE);
     if ( surface == NULL ) {
-        std::cerr <<  "Could not setup screen to resolution "
-                  << WINDOW_HEIGHT << 'x' <<  WINDOW_HEIGHT
-                  << ' ' <<  SDL_GetError() << std::endl;
+        fprintf(stderr, "Could not setup screen to resolution %dx%d : %s\n", 
+                WINDOW_WIDTH, WINDOW_HEIGHT, SDL_GetError());
         exit(1);
     }
 
-    SDL_Event event;
-    bool leftPressed = false;
-    bool rightPressed = false;
+    // default
+    //ReactDiffuse reactDiffuse(MATRIX_W, MATRIX_H, .055, .062);
 
-    while(true) {
+    // mitosis
+    //ReactDiffuse reactDiffuse(MATRIX_W, MATRIX_H, .0367, .0649);
+
+    // coral
+    reaction_diffusion_system_init(&rds, MATRIX_W, MATRIX_H, .0545, .062, 1.0, 0.5);
+
+
+    SDL_Event event;
+    int leftPressed = 0;
+    int rightPressed = 0;
+    int mustExit = 0;
+
+    while (!mustExit) {
+
         SDL_PollEvent(&event);
         switch (event.type) {
             case SDL_QUIT:
-                exit(0);
+                mustExit = 1;
                 break;
             case SDL_MOUSEBUTTONDOWN:
             case SDL_MOUSEBUTTONUP:
@@ -102,18 +105,20 @@ int main(int argc, char **argv) {
                 break;
             case SDL_MOUSEMOTION:
                 if (leftPressed) {
-                    reactDiffuse.set(reactDiffuse.V,
-                                     (int)(event.motion.x / RATIO_X),
-                                     (int)(event.motion.y / RATIO_Y),
-                                     1);
+                    reaction_diffusion_system_set(&rds, rds.V,
+                                                  (int)(event.motion.x / RATIO_X),
+                                                  (int)(event.motion.y / RATIO_Y),
+                                                  1);
                 }
         }
 
         draw(surface);
         SDL_Flip(surface);
 
-        reactDiffuse.update(1.);
+        reaction_diffusion_system_update(&rds, 1.);
     }
+
+    reaction_diffusion_system_free(&rds);
 
     return 0;
 }

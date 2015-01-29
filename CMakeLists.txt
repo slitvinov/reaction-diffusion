@@ -2,7 +2,6 @@ cmake_minimum_required (VERSION 2.8)
 project (ReactDiffuse)
 set(VERSION "0.1.0")
 
-
 # include paths
 include_directories(src)
 
@@ -10,7 +9,7 @@ find_package(SDL REQUIRED)
 include_directories(${SDL_INCLUDE_DIR})
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "bin/")
-file(GLOB_RECURSE project_SOURCES "src/*.cpp")
+file(GLOB_RECURSE project_SOURCES "src/*.c")
 
 if (APPLE)
     set(OSX_ICON_FILES ${CMAKE_CURRENT_SOURCE_DIR}/icons/Icon.icns)
@@ -38,7 +37,5 @@ if (MSVC)
 endif()
 
 link_directories( /usr/local/lib )
-
-set(CMAKE_CXX_FLAGS "-stdlib=libc++")
 target_link_libraries(ReactDiffuse ${SDL_LIBRARY})
 
