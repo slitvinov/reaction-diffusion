@@ -48,7 +48,7 @@ void draw(SDL_Surface *surface) {
 
             SDL_FillRect(surface,
                          &rect,
-                         SDL_MapHSV(surface->format, v * 360, v, u ));
+                         SDL_MapHSV(surface->format, (int)(u * 1000) % 360, v, .9*v + .1*u));
         }
     }
 }
@@ -71,10 +71,10 @@ int main(int argc, char **argv) {
     }
 
     // default
-    //reaction_diffusion_system_init(&rds, MATRIX_W, MATRIX_H, .055, .062, 1.0, 0.5);
+    reaction_diffusion_system_init(&rds, MATRIX_W, MATRIX_H, .055, .062, 1.0, 0.5);
 
     // mitosis
-    reaction_diffusion_system_init(&rds, MATRIX_W, MATRIX_H, .0367, .0649, 1.0, 0.5);
+    // reaction_diffusion_system_init(&rds, MATRIX_W, MATRIX_H, .0367, .0649, 1.0, 0.5);
 
     // coral
     // reaction_diffusion_system_init(&rds, MATRIX_W, MATRIX_H, .0545, .062, 1.0, 0.5);
