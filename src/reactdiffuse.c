@@ -1,4 +1,5 @@
 #include "reactdiffuse.h"
+#include <math.h>
 
 void reaction_diffusion_system_init(reaction_diffusion_system *s,
                                     size_t width,
@@ -98,6 +99,6 @@ double reaction_diffusion_system_get(reaction_diffusion_system *s, double *m, si
 void reaction_diffusion_system_set(reaction_diffusion_system *s, double *m, size_t x, size_t y, double v) {
     x = (x + s->width)  % s->width;
     y = (y + s->height) % s->height;
-    m[y*s->width + x] = v;
+    m[y*s->width + x] = fmin(1, fmax(-1, v));
 }
 
