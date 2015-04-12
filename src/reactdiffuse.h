@@ -2,6 +2,7 @@
 #define __REACT_DIFFUSE_H__
 
 #include <stdlib.h>
+#include <math.h>
 
 #define DU 1.0
 #define DV 0.5
@@ -20,6 +21,9 @@ typedef struct {
     double *swapV;
 } reaction_diffusion_system ;
 
+#define reaction_diffusion_system_get(s, m, x, y) (m[(((y) + (s)->height) % (s)->height)*(s)->width + (((x) + (s)->width)  % (s)->width)])
+#define reaction_diffusion_system_set(s, m, x, y, v) (m[(((y) + (s)->height) % (s)->height)*(s)->width + (((x) + (s)->width)  % (s)->width)] = fmin(1, fmax(-1, (v))))
+
 void reaction_diffusion_system_init(reaction_diffusion_system *system,
                                     size_t width,
                                     size_t height,
@@ -31,10 +35,6 @@ void reaction_diffusion_system_init(reaction_diffusion_system *system,
 void reaction_diffusion_system_free(reaction_diffusion_system *system);
 
 void reaction_diffusion_system_update(reaction_diffusion_system *system, double dt);
-
-double reaction_diffusion_system_get(reaction_diffusion_system *system, double *m, size_t x, size_t y);
-
-void reaction_diffusion_system_set(reaction_diffusion_system *system, double *m, size_t x, size_t y, double v);
 
 #endif
 
