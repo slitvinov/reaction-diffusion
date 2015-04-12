@@ -35,42 +35,30 @@ void reaction_diffusion_system_free(reaction_diffusion_system *s) {
     free(s->swapV);
 }
 
-void calculate_laplacian(reaction_diffusion_system *s, double *from, double *to) {
-    double v;
-
-    for (int x = 0; x < s->width; x++) {
-        for (int y = 0; y < s->height; y++) {
-            v = .05 * reaction_diffusion_system_get(s, from, x-1, y-1) +
-                .2  * reaction_diffusion_system_get(s, from, x-1, y  ) +
-                .05 * reaction_diffusion_system_get(s, from, x-1, y+1) +
-                .2  * reaction_diffusion_system_get(s, from, x  , y-1) +
-                -1. * reaction_diffusion_system_get(s, from, x  , y  ) +
-                .2  * reaction_diffusion_system_get(s, from, x  , y+1) +
-                .05 * reaction_diffusion_system_get(s, from, x+1, y-1) +
-                .2  * reaction_diffusion_system_get(s, from, x+1, y  ) +
-                .05 * reaction_diffusion_system_get(s, from, x+1, y+1);
-            reaction_diffusion_system_set(s, to, x, y, v);
-        }
-    }
+double get_laplacian(reaction_diffusion_system *s, double *from, int x, int y) {
+    return .05 * reaction_diffusion_system_get(s, from, x-1, y-1) +
+           .2  * reaction_diffusion_system_get(s, from, x-1, y  ) +
+           .05 * reaction_diffusion_system_get(s, from, x-1, y+1) +
+           .2  * reaction_diffusion_system_get(s, from, x  , y-1) +
+           -1. * reaction_diffusion_system_get(s, from, x  , y  ) +
+           .2  * reaction_diffusion_system_get(s, from, x  , y+1) +
+           .05 * reaction_diffusion_system_get(s, from, x+1, y-1) +
+           .2  * reaction_diffusion_system_get(s, from, x+1, y  ) +
+           .05 * reaction_diffusion_system_get(s, from, x+1, y+1);
 }
-
 
 void reaction_diffusion_system_update(reaction_diffusion_system *s, double dt) {
     double *temp;
-
-    // write laplacians calculation to swaps
-    calculate_laplacian(s, s->U, s->swapU);
-    calculate_laplacian(s, s->V, s->swapV);
 
     // calculate new concentrations, and write the new value to swaps
     for (int x = 0; x < s->width; x++) {
         for (int y = 0; y < s->height; y++) {
             double u = reaction_diffusion_system_get(s, s->U, x, y);
             double v = reaction_diffusion_system_get(s, s->V, x, y);
-            double deltaU = s->du*reaction_diffusion_system_get(s, s->swapU, x, y)
+            double deltaU = s->du*get_laplacian(s, s->U, x, y)
                             - (u * v * v)
                             + s->f*(1. - u);
-            double deltaV = s->dv*reaction_diffusion_system_get(s, s->swapV, x, y)
+            double deltaV = s->dv*get_laplacian(s, s->V, x, y)
                             + (u * v * v)
                             - (s->k + s->f)*v;
 
