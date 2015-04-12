@@ -48,7 +48,8 @@ void draw(SDL_Surface *surface) {
 
             SDL_FillRect(surface,
                          &rect,
-                         SDL_MapHSV(surface->format, (int)(u * 1000) % 360, v, .9*v + .1*u));
+                         SDL_MapHSV(surface->format, 0, 0, .5 + .5*sin(20*v + 10*u) ));
+                         //SDL_MapHSV(surface->format, (int)(u * 1000) % 360, v, .9*v + .1*u));
         }
     }
 }
