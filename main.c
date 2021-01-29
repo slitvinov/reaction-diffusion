@@ -20,10 +20,10 @@ typedef struct {
     double *swapV;
 } reaction_diffusion_system ;
 
-#define reaction_diffusion_system_get(s, m, x, y) (m[(((y) + (s)->height) % (s)->height)*(s)->width + (((x) + (s)->width)  % (s)->width)])
-#define reaction_diffusion_system_set(s, m, x, y, v) (m[(((y) + (s)->height) % (s)->height)*(s)->width + (((x) + (s)->width)  % (s)->width)] = fmin(1, fmax(-1, (v))))
+#define get(s, m, x, y) (m[(((y) + (s)->height) % (s)->height)*(s)->width + (((x) + (s)->width)  % (s)->width)])
+#define set(s, m, x, y, v) (m[(((y) + (s)->height) % (s)->height)*(s)->width + (((x) + (s)->width)  % (s)->width)] = fmin(1, fmax(-1, (v))))
 
-void reaction_diffusion_system_init(reaction_diffusion_system *s,
+void ini(reaction_diffusion_system *s,
                                     size_t width,
                                     size_t height,
                                     double f,
@@ -42,16 +42,16 @@ void reaction_diffusion_system_init(reaction_diffusion_system *s,
     s->swapU = (double*)malloc(width * height * sizeof(double));
     s->swapV = (double*)malloc(width * height * sizeof(double));
 
-    // initialize
+    // iniialize
     for (int x = 0; x < width; x++) {
         for (int y = 0; y < height; y++) {
-            reaction_diffusion_system_set(s, s->U, x, y, 1);
-            reaction_diffusion_system_set(s, s->V, x, y, 0);
+            set(s, s->U, x, y, 1);
+            set(s, s->V, x, y, 0);
         }
     }
 }
 
-void reaction_diffusion_system_free(reaction_diffusion_system *s) {
+void fin(reaction_diffusion_system *s) {
     free(s->U);
     free(s->V);
     free(s->swapU);
@@ -59,25 +59,25 @@ void reaction_diffusion_system_free(reaction_diffusion_system *s) {
 }
 
 double get_laplacian(reaction_diffusion_system *s, double *from, int x, int y) {
-    return .05 * reaction_diffusion_system_get(s, from, x-1, y-1) +
-           .2  * reaction_diffusion_system_get(s, from, x-1, y  ) +
-           .05 * reaction_diffusion_system_get(s, from, x-1, y+1) +
-           .2  * reaction_diffusion_system_get(s, from, x  , y-1) +
-           -1. * reaction_diffusion_system_get(s, from, x  , y  ) +
-           .2  * reaction_diffusion_system_get(s, from, x  , y+1) +
-           .05 * reaction_diffusion_system_get(s, from, x+1, y-1) +
-           .2  * reaction_diffusion_system_get(s, from, x+1, y  ) +
-           .05 * reaction_diffusion_system_get(s, from, x+1, y+1);
+    return .05 * get(s, from, x-1, y-1) +
+           .2  * get(s, from, x-1, y  ) +
+           .05 * get(s, from, x-1, y+1) +
+           .2  * get(s, from, x  , y-1) +
+           -1. * get(s, from, x  , y  ) +
+           .2  * get(s, from, x  , y+1) +
+           .05 * get(s, from, x+1, y-1) +
+           .2  * get(s, from, x+1, y  ) +
+           .05 * get(s, from, x+1, y+1);
 }
 
-void reaction_diffusion_system_update(reaction_diffusion_system *s, double dt) {
+void update(reaction_diffusion_system *s, double dt) {
     double *temp;
 
     // calculate new concentrations, and write the new value to swaps
     for (int x = 0; x < s->width; x++) {
         for (int y = 0; y < s->height; y++) {
-            double u = reaction_diffusion_system_get(s, s->U, x, y);
-            double v = reaction_diffusion_system_get(s, s->V, x, y);
+            double u = get(s, s->U, x, y);
+            double v = get(s, s->V, x, y);
             double deltaU = s->du*get_laplacian(s, s->U, x, y)
                             - (u * v * v)
                             + s->f*(1. - u);
@@ -85,8 +85,8 @@ void reaction_diffusion_system_update(reaction_diffusion_system *s, double dt) {
                             + (u * v * v)
                             - (s->k + s->f)*v;
 
-            reaction_diffusion_system_set(s, s->swapU, x, y, u + deltaU*dt);
-            reaction_diffusion_system_set(s, s->swapV, x, y, v + deltaV*dt);
+            set(s, s->swapU, x, y, u + deltaU*dt);
+            set(s, s->swapV, x, y, v + deltaV*dt);
         }
     }
 
@@ -138,8 +138,8 @@ void draw(SDL_Surface *surface) {
 
     for (int x = 0; x < MATRIX_W; x++) {
         for (int y = 0; y < MATRIX_H; y++) {
-            double u = reaction_diffusion_system_get(&rds, rds.U, x, y);
-            double v = reaction_diffusion_system_get(&rds, rds.V, x, y);
+            double u = get(&rds, rds.U, x, y);
+            double v = get(&rds, rds.V, x, y);
 
             rect.x = RATIO_X * x;
             rect.y = RATIO_Y * y;
@@ -155,7 +155,7 @@ void draw(SDL_Surface *surface) {
 int main(int argc, char **argv) {
     /* SDL SEtup */
     if ( SDL_Init(SDL_INIT_VIDEO) < 0 ) {
-        fprintf(stderr, "Could not initialize SDL: %s\n", SDL_GetError());
+        fprintf(stderr, "Could not iniialize SDL: %s\n", SDL_GetError());
         exit(1);
     }
     atexit(SDL_Quit);
@@ -170,13 +170,13 @@ int main(int argc, char **argv) {
     }
 
     // default
-    reaction_diffusion_system_init(&rds, MATRIX_W, MATRIX_H, .055, .062, 1.0, 0.5);
+    ini(&rds, MATRIX_W, MATRIX_H, .055, .062, 1.0, 0.5);
 
     // mitosis
-    // reaction_diffusion_system_init(&rds, MATRIX_W, MATRIX_H, .0367, .0649, 1.0, 0.5);
+    // ini(&rds, MATRIX_W, MATRIX_H, .0367, .0649, 1.0, 0.5);
 
     // coral
-    // reaction_diffusion_system_init(&rds, MATRIX_W, MATRIX_H, .0545, .062, 1.0, 0.5);
+    // ini(&rds, MATRIX_W, MATRIX_H, .0545, .062, 1.0, 0.5);
 
 
     SDL_Event event;
@@ -204,7 +204,7 @@ int main(int argc, char **argv) {
                 break;
             case SDL_MOUSEMOTION:
                 if (leftPressed) {
-                    reaction_diffusion_system_set(&rds, rds.V,
+                    set(&rds, rds.V,
                                                   (int)(event.motion.x / RATIO_X),
                                                   (int)(event.motion.y / RATIO_Y),
                                                   1);
@@ -214,10 +214,10 @@ int main(int argc, char **argv) {
         draw(surface);
         SDL_Flip(surface);
 
-        reaction_diffusion_system_update(&rds, 1.);
+        update(&rds, 1.);
     }
 
-    reaction_diffusion_system_free(&rds);
+    fin(&rds);
 
     return 0;
 }
