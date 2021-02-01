@@ -11,14 +11,14 @@
 #define MATRIX_H 200
 #define RATIO_X (WINDOW_WIDTH / MATRIX_W)
 #define RATIO_Y (WINDOW_HEIGHT / MATRIX_H)
-#define get(s, m, x, y)                                                        \
-  (m[(((y) + (s)->height) % (s)->height) * (s)->width +                        \
-     (((x) + (s)->width) % (s)->width)])
-#define set(s, m, x, y, v)                                                     \
-  (m[(((y) + (s)->height) % (s)->height) * (s)->width +                        \
-     (((x) + (s)->width) % (s)->width)] = fmin(1, fmax(-1, (v))))
+#define get(m, x, y)                                                        \
+  (m[(((y) + s.height) % s.height) * s.width +                        \
+     (((x) + s.width) % s.width)])
+#define set(m, x, y, v)                                                     \
+  (m[(((y) + s.height) % s.height) * s.width +                        \
+     (((x) + s.width) % s.width)] = fmin(1, fmax(-1, (v))))
 
-struct RDS {
+static struct RDS {
   size_t width;
   size_t height;
   double f;
@@ -30,67 +30,66 @@ struct RDS {
   double *V;
   double *swapU;
   double *swapV;
-};
-static struct RDS rds;
+} s;
 
-void ini(struct RDS *s, size_t width, size_t height, double f, double k,
+void ini(size_t width, size_t height, double f, double k,
          double du, double dv) {
 
-  s->width = width;
-  s->height = height;
-  s->f = f;
-  s->k = k;
-  s->du = du;
-  s->dv = dv;
-  s->U = (double *)malloc(width * height * sizeof(double));
-  s->V = (double *)malloc(width * height * sizeof(double));
-  s->swapU = (double *)malloc(width * height * sizeof(double));
-  s->swapV = (double *)malloc(width * height * sizeof(double));
+  s.width = width;
+  s.height = height;
+  s.f = f;
+  s.k = k;
+  s.du = du;
+  s.dv = dv;
+  s.U = (double *)malloc(width * height * sizeof(double));
+  s.V = (double *)malloc(width * height * sizeof(double));
+  s.swapU = (double *)malloc(width * height * sizeof(double));
+  s.swapV = (double *)malloc(width * height * sizeof(double));
 
   // iniialize
   for (int x = 0; x < width; x++) {
     for (int y = 0; y < height; y++) {
-      set(s, s->U, x, y, 1);
-      set(s, s->V, x, y, 0);
+      set(s.U, x, y, 1);
+      set(s.V, x, y, 0);
     }
   }
 }
 
-void fin(struct RDS *s) {
-  free(s->U);
-  free(s->V);
-  free(s->swapU);
-  free(s->swapV);
+void fin(void) {
+  free(s.U);
+  free(s.V);
+  free(s.swapU);
+  free(s.swapV);
 }
 
-double get_laplacian(struct RDS *s, double *from, int x, int y) {
-  return .05 * get(s, from, x - 1, y - 1) + .2 * get(s, from, x - 1, y) +
-         .05 * get(s, from, x - 1, y + 1) + .2 * get(s, from, x, y - 1) +
-         -1. * get(s, from, x, y) + .2 * get(s, from, x, y + 1) +
-         .05 * get(s, from, x + 1, y - 1) + .2 * get(s, from, x + 1, y) +
-         .05 * get(s, from, x + 1, y + 1);
+double get_laplacian(double *from, int x, int y) {
+  return .05 * get(from, x - 1, y - 1) + .2 * get(from, x - 1, y) +
+         .05 * get(from, x - 1, y + 1) + .2 * get(from, x, y - 1) +
+         -1. * get(from, x, y) + .2 * get(from, x, y + 1) +
+         .05 * get(from, x + 1, y - 1) + .2 * get(from, x + 1, y) +
+         .05 * get(from, x + 1, y + 1);
 }
 
-void update(struct RDS *s, double dt) {
+void update(double dt) {
   double *temp;
-  for (int x = 0; x < s->width; x++) {
-    for (int y = 0; y < s->height; y++) {
-      double u = get(s, s->U, x, y);
-      double v = get(s, s->V, x, y);
+  for (int x = 0; x < s.width; x++) {
+    for (int y = 0; y < s.height; y++) {
+      double u = get(s.U, x, y);
+      double v = get(s.V, x, y);
       double deltaU =
-          s->du * get_laplacian(s, s->U, x, y) - (u * v * v) + s->f * (1. - u);
-      double deltaV = s->dv * get_laplacian(s, s->V, x, y) + (u * v * v) -
-                      (s->k + s->f) * v;
-      set(s, s->swapU, x, y, u + deltaU * dt);
-      set(s, s->swapV, x, y, v + deltaV * dt);
+          s.du * get_laplacian(s.U, x, y) - (u * v * v) + s.f * (1. - u);
+      double deltaV = s.dv * get_laplacian(s.V, x, y) + (u * v * v) -
+                      (s.k + s.f) * v;
+      set(s.swapU, x, y, u + deltaU * dt);
+      set(s.swapV, x, y, v + deltaV * dt);
     }
   }
-  temp = s->U;
-  s->U = s->swapU;
-  s->swapU = temp;
-  temp = s->V;
-  s->V = s->swapV;
-  s->swapV = temp;
+  temp = s.U;
+  s.U = s.swapU;
+  s.swapU = temp;
+  temp = s.V;
+  s.V = s.swapV;
+  s.swapV = temp;
 }
 
 Uint32 SDL_MapHSV(SDL_PixelFormat *fmt, float h, float s, float v) {
@@ -132,8 +131,8 @@ void draw(SDL_Surface *surface) {
 
   for (int x = 0; x < MATRIX_W; x++) {
     for (int y = 0; y < MATRIX_H; y++) {
-      double u = get(&rds, rds.U, x, y);
-      double v = get(&rds, rds.V, x, y);
+      double u = get(s.U, x, y);
+      double v = get(s.V, x, y);
 
       rect.x = RATIO_X * x;
       rect.y = RATIO_Y * y;
@@ -164,11 +163,11 @@ int main(int argc, char **argv) {
             WINDOW_WIDTH, WINDOW_HEIGHT, SDL_GetError());
     exit(1);
   }
-  ini(&rds, MATRIX_W, MATRIX_H, .055, .062, 1.0, 0.5);
+  ini(MATRIX_W, MATRIX_H, .055, .062, 1.0, 0.5);
   // mitosis
-  // ini(&rds, MATRIX_W, MATRIX_H, .0367, .0649, 1.0, 0.5);
+  // ini(MATRIX_W, MATRIX_H, .0367, .0649, 1.0, 0.5);
   // coral
-  // ini(&rds, MATRIX_W, MATRIX_H, .0545, .062, 1.0, 0.5);
+  // ini(MATRIX_W, MATRIX_H, .0545, .062, 1.0, 0.5);
   while (!mustExit) {
     SDL_PollEvent(&event);
     switch (event.type) {
@@ -188,13 +187,13 @@ int main(int argc, char **argv) {
       break;
     case SDL_MOUSEMOTION:
       if (leftPressed) {
-        set(&rds, rds.V, (int)(event.motion.x / RATIO_X),
+        set(s.V, (int)(event.motion.x / RATIO_X),
             (int)(event.motion.y / RATIO_Y), 1);
       }
     }
     draw(surface);
     SDL_Flip(surface);
-    update(&rds, 1.);
+    update(1.);
   }
-  fin(&rds);
+  fin();
 }
