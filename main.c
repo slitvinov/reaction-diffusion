@@ -11,12 +11,11 @@
 #define MATRIX_H 200
 #define RATIO_X (WINDOW_WIDTH / MATRIX_W)
 #define RATIO_Y (WINDOW_HEIGHT / MATRIX_H)
-#define get(m, x, y)                                                        \
-  (m[(((y) + s.height) % s.height) * s.width +                        \
-     (((x) + s.width) % s.width)])
-#define set(m, x, y, v)                                                     \
-  (m[(((y) + s.height) % s.height) * s.width +                        \
-     (((x) + s.width) % s.width)] = fmin(1, fmax(-1, (v))))
+#define get(m, x, y)                                                           \
+  (m[(((y) + s.height) % s.height) * s.width + (((x) + s.width) % s.width)])
+#define set(m, x, y, v)                                                        \
+  (m[(((y) + s.height) % s.height) * s.width + (((x) + s.width) % s.width)] =  \
+       fmin(1, fmax(-1, (v))))
 
 static struct RDS {
   size_t width;
@@ -32,8 +31,8 @@ static struct RDS {
   double *swapV;
 } s;
 
-void ini(size_t width, size_t height, double f, double k,
-         double du, double dv) {
+void ini(size_t width, size_t height, double f, double k, double du,
+         double dv) {
 
   s.width = width;
   s.height = height;
@@ -78,8 +77,8 @@ void update(double dt) {
       double v = get(s.V, x, y);
       double deltaU =
           s.du * get_laplacian(s.U, x, y) - (u * v * v) + s.f * (1. - u);
-      double deltaV = s.dv * get_laplacian(s.V, x, y) + (u * v * v) -
-                      (s.k + s.f) * v;
+      double deltaV =
+          s.dv * get_laplacian(s.V, x, y) + (u * v * v) - (s.k + s.f) * v;
       set(s.swapU, x, y, u + deltaU * dt);
       set(s.swapV, x, y, v + deltaV * dt);
     }
@@ -163,6 +162,7 @@ int main(int argc, char **argv) {
             WINDOW_WIDTH, WINDOW_HEIGHT, SDL_GetError());
     exit(1);
   }
+
   ini(MATRIX_W, MATRIX_H, .055, .062, 1.0, 0.5);
   // mitosis
   // ini(MATRIX_W, MATRIX_H, .0367, .0649, 1.0, 0.5);
